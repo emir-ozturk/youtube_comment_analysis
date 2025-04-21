@@ -4,30 +4,14 @@ document.addEventListener('DOMContentLoaded', () => {
     const loadingSpinner = document.querySelector('.loading');
     const wordCloudContainer = document.getElementById('wordCloudContainer');
     let wordCloudSvg;
+    let currentWordData = []; // Store the current word data
 
-    // Sample data for initial display
-    const sampleData = [
-        { word: "movie", count: 33 },
-        { word: "harry", count: 25 },
-        { word: "potter", count: 20 },
-        { word: "film", count: 19 },
-        { word: "like", count: 13 },
-        { word: "voice", count: 12 },
-        { word: "love", count: 12 },
-        { word: "first", count: 7 },
-        { word: "chamber", count: 7 },
-        { word: "think", count: 7 },
-        { word: "child", count: 7 },
-        { word: "book", count: 7 },
-        { word: "best", count: 6 }
-    ];
-
-    // Initialize word cloud with sample data
-    createWordCloud(sampleData);
+    // Initialize empty word cloud
+    createWordCloud([]);
 
     searchForm.addEventListener('submit', async (e) => {
         e.preventDefault();
-        
+
         const videoUrl = videoUrlInput.value.trim();
         if (!videoUrl) return;
 
@@ -35,11 +19,14 @@ document.addEventListener('DOMContentLoaded', () => {
         loadingSpinner.style.display = 'block';
 
         try {
-            const response = await fetch('{{commentsUrl}}/wordcloud', {
+            const response = await fetch('http://127.0.0.1:5000/comments/wordcloud', {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
+                    'Accept': 'application/json'
                 },
+                mode: 'cors',
+                credentials: 'omit',
                 body: JSON.stringify({ video_url: videoUrl })
             });
 
@@ -48,10 +35,12 @@ document.addEventListener('DOMContentLoaded', () => {
             }
 
             const words = await response.json();
+            currentWordData = words; // Store the fetched data
             createWordCloud(words);
         } catch (error) {
             showError('An error occurred while generating the word cloud. Please try again.');
             console.error('Error:', error);
+            createWordCloud([]); // Reset to empty word cloud on error
         } finally {
             loadingSpinner.style.display = 'none';
         }
@@ -61,6 +50,12 @@ document.addEventListener('DOMContentLoaded', () => {
         // Clear previous word cloud
         d3.select("#wordCloudContainer").selectAll("*").remove();
 
+        if (words.length === 0) {
+            // Display a message when no data is available
+            wordCloudContainer.innerHTML = '<div class="text-center text-muted mt-5">Enter a YouTube URL to generate word cloud</div>';
+            return;
+        }
+
         // Create SVG
         const width = wordCloudContainer.clientWidth;
         const height = wordCloudContainer.clientHeight;
@@ -69,7 +64,7 @@ document.addEventListener('DOMContentLoaded', () => {
             .attr("width", width)
             .attr("height", height)
             .append("g")
-            .attr("transform", `translate(${width/2},${height/2})`);
+            .attr("transform", `translate(${width / 2},${height / 2})`);
 
         // Create word cloud layout
         const layout = d3.layout.cloud()
@@ -104,7 +99,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 .attr("transform", d => `translate(${d.x},${d.y}) rotate(${d.rotate})`)
                 .text(d => d.text)
                 .classed("word-cloud-word", true)
-                .on("mouseover", function(event, d) {
+                .on("mouseover", function (event, d) {
                     d3.select(this)
                         .transition()
                         .duration(200)
@@ -116,7 +111,7 @@ document.addEventListener('DOMContentLoaded', () => {
                         .style("top", `${event.pageY + 10}px`)
                         .html(`Count: ${d.count}`);
                 })
-                .on("mouseout", function() {
+                .on("mouseout", function () {
                     d3.select(this)
                         .transition()
                         .duration(200)
@@ -138,7 +133,7 @@ document.addEventListener('DOMContentLoaded', () => {
     // Handle window resize
     window.addEventListener('resize', () => {
         if (wordCloudSvg) {
-            createWordCloud(sampleData);
+            createWordCloud(currentWordData);
         }
     });
 }); 

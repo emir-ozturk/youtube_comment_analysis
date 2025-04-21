@@ -6,7 +6,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     searchForm.addEventListener('submit', async (e) => {
         e.preventDefault();
-        
+
         const videoUrl = videoUrlInput.value.trim();
         if (!videoUrl) return;
 
@@ -20,25 +20,69 @@ document.addEventListener('DOMContentLoaded', () => {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
+                    'Accept': 'application/json'
                 },
+                mode: 'cors',
+                credentials: 'omit',
                 body: JSON.stringify({ video_url: videoUrl })
+            }).catch(error => {
+                console.error('Fetch Error:', error);
+                throw new Error('Network error occurred. Please check your connection and try again.');
             });
 
+            if (!classifyResponse) {
+                throw new Error('No response received from server');
+            }
+
+            console.log('Classify Response Status:', classifyResponse.status);
+            console.log('Classify Response Headers:', classifyResponse.headers);
+
+            const responseData = await classifyResponse.json();
+            console.log('Classify Response Data:', responseData);
+
             if (!classifyResponse.ok) {
-                throw new Error('Failed to classify comments');
+                throw new Error(responseData.error || `HTTP error! status: ${classifyResponse.status}`);
             }
 
             // Then, get the classified comments
-            const getResponse = await fetch('{{commentsUrl}}/get');
+            const getResponse = await fetch('http://127.0.0.1:5000/comments/get', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Accept': 'application/json'
+                },
+                mode: 'cors',
+                credentials: 'omit',
+                body: JSON.stringify({ video_url: videoUrl })
+            }).catch(error => {
+                console.error('Fetch Error:', error);
+                throw new Error('Network error occurred while fetching comments.');
+            });
+
+            if (!getResponse) {
+                throw new Error('No response received while fetching comments');
+            }
+
+            console.log('Get Response Status:', getResponse.status);
+
             if (!getResponse.ok) {
-                throw new Error('Failed to fetch comments');
+                const errorText = await getResponse.text();
+                console.error('Error Response:', errorText);
+                throw new Error(`Failed to fetch comments: ${errorText}`);
             }
 
             const comments = await getResponse.json();
+            console.log('Comments Data:', comments);
+
+            if (!comments || comments.length === 0) {
+                showError('No comments found for this video.');
+                return;
+            }
+
             displayComments(comments);
         } catch (error) {
-            showError('An error occurred while processing your request. Please try again.');
-            console.error('Error:', error);
+            console.error('Full Error:', error);
+            showError(`An error occurred: ${error.message}`);
         } finally {
             loadingSpinner.style.display = 'none';
         }

@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -10,23 +11,29 @@
         .comment-card {
             transition: transform 0.2s;
         }
+
         .comment-card:hover {
             transform: translateY(-5px);
         }
+
         .sentiment-positive {
             border-left: 4px solid #198754;
         }
+
         .sentiment-negative {
             border-left: 4px solid #dc3545;
         }
+
         .sentiment-neutral {
             border-left: 4px solid #6c757d;
         }
+
         .loading {
             display: none;
         }
     </style>
 </head>
+
 <body class="bg-light">
     <nav class="navbar navbar-expand-lg navbar-dark bg-dark">
         <div class="container">
@@ -66,8 +73,8 @@
                         <h5 class="card-title mb-4">Analyze YouTube Comments</h5>
                         <form id="searchForm">
                             <div class="input-group mb-3">
-                                <input type="url" class="form-control" id="videoUrl" 
-                                       placeholder="Enter YouTube video URL" required>
+                                <input type="url" class="form-control" id="videoUrl"
+                                    placeholder="Enter YouTube video URL" required>
                                 <button class="btn btn-primary" type="submit">
                                     <i class="bi bi-search"></i> Analyze
                                 </button>
@@ -93,4 +100,5 @@
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
     <script src="script.js"></script>
 </body>
-</html> 
+
+</html>
