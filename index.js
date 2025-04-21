@@ -3,6 +3,15 @@ document.addEventListener('DOMContentLoaded', () => {
     const videoUrlInput = document.getElementById('videoUrl');
     const loadingSpinner = document.querySelector('.loading');
     const commentsContainer = document.getElementById('commentsContainer');
+    const sentimentFilter = document.getElementById('sentimentFilter');
+    let currentComments = []; // Store current comments for filtering
+
+    // Add event listener for sentiment filter
+    sentimentFilter.addEventListener('change', () => {
+        if (currentComments.length > 0) {
+            displayComments(currentComments);
+        }
+    });
 
     searchForm.addEventListener('submit', async (e) => {
         e.preventDefault();
@@ -13,6 +22,7 @@ document.addEventListener('DOMContentLoaded', () => {
         // Show loading spinner
         loadingSpinner.style.display = 'block';
         commentsContainer.innerHTML = '';
+        sentimentFilter.value = 'all'; // Reset filter to 'all'
 
         try {
             // First, classify the comments
@@ -79,6 +89,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 return;
             }
 
+            currentComments = comments; // Store comments for filtering
             displayComments(comments);
         } catch (error) {
             console.error('Full Error:', error);
@@ -98,7 +109,30 @@ document.addEventListener('DOMContentLoaded', () => {
             return;
         }
 
-        const commentsHTML = comments.map(comment => `
+        // Filter comments based on selected sentiment
+        const selectedSentiment = sentimentFilter.value;
+        const filteredComments = selectedSentiment === 'all'
+            ? comments
+            : comments.filter(comment => comment.sentiment_category.toLowerCase() === selectedSentiment);
+
+        if (filteredComments.length === 0) {
+            commentsContainer.innerHTML = `
+                <div class="alert alert-info">
+                    No ${selectedSentiment} comments found.
+                </div>
+            `;
+            return;
+        }
+
+        // Add comment count information
+        const commentCountHTML = `
+            <div class="mb-3 text-muted">
+                Showing ${filteredComments.length} ${selectedSentiment !== 'all' ? selectedSentiment : ''} comment${filteredComments.length !== 1 ? 's' : ''} 
+                ${selectedSentiment !== 'all' ? `(out of ${comments.length} total)` : ''}
+            </div>
+        `;
+
+        const commentsHTML = filteredComments.map(comment => `
             <div class="card comment-card mb-3 sentiment-${comment.sentiment_category}">
                 <div class="card-body">
                     <div class="d-flex justify-content-between align-items-start">
@@ -117,7 +151,7 @@ document.addEventListener('DOMContentLoaded', () => {
             </div>
         `).join('');
 
-        commentsContainer.innerHTML = commentsHTML;
+        commentsContainer.innerHTML = commentCountHTML + commentsHTML;
     }
 
     function formatDate(dateString) {
