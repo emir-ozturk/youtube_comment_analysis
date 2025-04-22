@@ -22,6 +22,7 @@ document.addEventListener('DOMContentLoaded', () => {
         if (currentStats.length > 0) {
             const filteredStats = filterStatsByDateRange(currentStats, dateRangeSelector.value);
             updateCharts(filteredStats);
+            updateSummaryCounts(filteredStats);
         }
     });
 
@@ -38,6 +39,35 @@ document.addEventListener('DOMContentLoaded', () => {
         loadingSpinner.style.display = 'block';
 
         try {
+            // First, classify the comments
+            const classifyResponse = await fetch('http://127.0.0.1:5000/comments/classify', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Accept': 'application/json'
+                },
+                mode: 'cors',
+                credentials: 'omit',
+                body: JSON.stringify({ video_url: videoUrl })
+            }).catch(error => {
+                console.error('Fetch Error:', error);
+                throw new Error('Network error occurred. Please check your connection and try again.');
+            });
+
+            if (!classifyResponse) {
+                throw new Error('No response received from server');
+            }
+
+            console.log('Classify Response Status:', classifyResponse.status);
+            console.log('Classify Response Headers:', classifyResponse.headers);
+
+            const responseData = await classifyResponse.json();
+            console.log('Classify Response Data:', responseData);
+
+            if (!classifyResponse.ok) {
+                throw new Error(responseData.error || `HTTP error! status: ${classifyResponse.status}`);
+            }
+
             const response = await fetch('http://127.0.0.1:5000/comments/stats_by_date', {
                 method: 'POST',
                 headers: {
@@ -89,6 +119,7 @@ document.addEventListener('DOMContentLoaded', () => {
             // Filter stats based on selected date range
             const filteredStats = filterStatsByDateRange(currentStats, dateRangeSelector.value);
             updateCharts(filteredStats);
+            updateSummaryCounts(filteredStats);
 
         } catch (error) {
             showError('An error occurred while fetching statistics. Please try again.');
@@ -347,6 +378,25 @@ document.addEventListener('DOMContentLoaded', () => {
             month: 'short',
             day: 'numeric'
         });
+    }
+
+    function updateSummaryCounts(stats) {
+        // Helper function to safely get values
+        const getValue = (obj, prop) => {
+            if (!obj || typeof obj !== 'object') return 0;
+            const value = obj[prop];
+            return typeof value === 'number' ? value : 0;
+        };
+
+        // Calculate total counts
+        const totalPositive = stats.reduce((sum, stat) => sum + getValue(stat.positive, 'count'), 0);
+        const totalNeutral = stats.reduce((sum, stat) => sum + getValue(stat.neutral, 'count'), 0);
+        const totalNegative = stats.reduce((sum, stat) => sum + getValue(stat.negative, 'count'), 0);
+
+        // Update the DOM
+        document.getElementById('positiveCount').textContent = totalPositive;
+        document.getElementById('neutralCount').textContent = totalNeutral;
+        document.getElementById('negativeCount').textContent = totalNegative;
     }
 
     function showError(message) {
