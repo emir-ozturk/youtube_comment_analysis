@@ -25,6 +25,35 @@ document.addEventListener('DOMContentLoaded', () => {
         themesContainer.innerHTML = '';
 
         try {
+            // First, classify the comments
+            const classifyResponse = await fetch('http://127.0.0.1:5000/comments/classify', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Accept': 'application/json'
+                },
+                mode: 'cors',
+                credentials: 'omit',
+                body: JSON.stringify({ video_url: videoUrl })
+            }).catch(error => {
+                console.error('Fetch Error:', error);
+                throw new Error('Network error occurred. Please check your connection and try again.');
+            });
+
+            if (!classifyResponse) {
+                throw new Error('No response received from server');
+            }
+
+            console.log('Classify Response Status:', classifyResponse.status);
+            console.log('Classify Response Headers:', classifyResponse.headers);
+
+            const responseData = await classifyResponse.json();
+            console.log('Classify Response Data:', responseData);
+
+            if (!classifyResponse.ok) {
+                throw new Error(responseData.error || `HTTP error! status: ${classifyResponse.status}`);
+            }
+
             // Then proceed with the themes request
             const response = await fetch(`${BACKEND_URL}/comments/theme`, {
                 method: 'POST',

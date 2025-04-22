@@ -1,3 +1,53 @@
+// Move toggleFullscreen function outside of DOMContentLoaded
+function toggleFullscreen(chartId) {
+    const chartContainer = document.querySelector(`#${chartId}`).closest('.chart-container');
+    const chart = window[chartId];
+
+    if (!chart) return;
+
+    if (!document.fullscreenElement) {
+        // Enter fullscreen
+        chartContainer.requestFullscreen().then(() => {
+            // Update chart size and options for fullscreen
+            chart.options.maintainAspectRatio = false;
+            chart.options.responsive = true;
+            chart.options.plugins = {
+                ...chart.options.plugins,
+                legend: {
+                    position: 'top',
+                    labels: {
+                        font: {
+                            size: 16
+                        }
+                    }
+                }
+            };
+            chart.update();
+        }).catch(err => {
+            console.error(`Error attempting to enable fullscreen: ${err.message}`);
+        });
+    } else {
+        // Exit fullscreen
+        document.exitFullscreen().then(() => {
+            // Reset chart options
+            chart.options.maintainAspectRatio = true;
+            chart.options.responsive = true;
+            chart.options.plugins = {
+                ...chart.options.plugins,
+                legend: {
+                    position: 'top',
+                    labels: {
+                        font: {
+                            size: 12
+                        }
+                    }
+                }
+            };
+            chart.update();
+        });
+    }
+}
+
 document.addEventListener('DOMContentLoaded', () => {
     const searchForm = document.getElementById('searchForm');
     const videoUrlInput = document.getElementById('videoUrl');

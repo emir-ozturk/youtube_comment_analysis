@@ -26,6 +26,35 @@ document.addEventListener('DOMContentLoaded', () => {
         try {
             // Fetch stats for each video
             for (const url of videoUrls) {
+                // First, classify the comments
+                const classifyResponse = await fetch('http://127.0.0.1:5000/comments/classify', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Accept': 'application/json'
+                    },
+                    mode: 'cors',
+                    credentials: 'omit',
+                    body: JSON.stringify({ video_url: url })
+                }).catch(error => {
+                    console.error('Fetch Error:', error);
+                    throw new Error('Network error occurred. Please check your connection and try again.');
+                });
+
+                if (!classifyResponse) {
+                    throw new Error('No response received from server');
+                }
+
+                console.log('Classify Response Status:', classifyResponse.status);
+                console.log('Classify Response Headers:', classifyResponse.headers);
+
+                const responseData = await classifyResponse.json();
+                console.log('Classify Response Data:', responseData);
+
+                if (!classifyResponse.ok) {
+                    throw new Error(responseData.error || `HTTP error! status: ${classifyResponse.status}`);
+                }
+
                 const response = await fetch('http://127.0.0.1:5000/comments/stats', {
                     method: 'POST',
                     headers: {
@@ -222,5 +251,54 @@ function removeVideoInput(button) {
         button.closest('.video-input-group').remove();
     } else {
         showError('At least one video URL is required');
+    }
+}
+
+function toggleFullscreen(chartId) {
+    const chartContainer = document.querySelector(`#${chartId}`).closest('.chart-container');
+    const chart = window[chartId];
+
+    if (!chart) return;
+
+    if (!document.fullscreenElement) {
+        // Enter fullscreen
+        chartContainer.requestFullscreen().then(() => {
+            // Update chart size and options for fullscreen
+            chart.options.maintainAspectRatio = false;
+            chart.options.responsive = true;
+            chart.options.plugins = {
+                ...chart.options.plugins,
+                legend: {
+                    position: 'top',
+                    labels: {
+                        font: {
+                            size: 16
+                        }
+                    }
+                }
+            };
+            chart.update();
+        }).catch(err => {
+            console.error(`Error attempting to enable fullscreen: ${err.message}`);
+        });
+    } else {
+        // Exit fullscreen
+        document.exitFullscreen().then(() => {
+            // Reset chart options
+            chart.options.maintainAspectRatio = true;
+            chart.options.responsive = true;
+            chart.options.plugins = {
+                ...chart.options.plugins,
+                legend: {
+                    position: 'top',
+                    labels: {
+                        font: {
+                            size: 12
+                        }
+                    }
+                }
+            };
+            chart.update();
+        });
     }
 } 

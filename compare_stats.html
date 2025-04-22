@@ -13,6 +13,7 @@
             position: relative;
             height: 400px;
             margin-bottom: 2rem;
+            transition: all 0.3s ease;
         }
 
         .loading {
@@ -21,6 +22,44 @@
 
         .video-input-group {
             margin-bottom: 1rem;
+        }
+
+        .chart-fullscreen-btn {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            z-index: 1001;
+            background: rgba(255, 255, 255, 0.9);
+            border: 1px solid rgba(0, 0, 0, 0.1);
+            border-radius: 4px;
+            padding: 8px 12px;
+            cursor: pointer;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+            transition: all 0.2s ease;
+        }
+
+        .chart-fullscreen-btn:hover {
+            background: white;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);
+            transform: translateY(-1px);
+        }
+
+        .chart-fullscreen-btn i {
+            font-size: 1.2rem;
+        }
+
+        /* Fullscreen styles */
+        .chart-container:fullscreen {
+            background: white;
+            padding: 20px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .chart-container:fullscreen canvas {
+            max-width: 100%;
+            max-height: 100%;
         }
     </style>
 </head>
@@ -109,6 +148,9 @@
                             <div class="card-body">
                                 <h6 class="card-title">Comment Distribution by Sentiment</h6>
                                 <div class="chart-container">
+                                    <button class="chart-fullscreen-btn" onclick="toggleFullscreen('sentimentChart')">
+                                        <i class="bi bi-arrows-fullscreen"></i>
+                                    </button>
                                     <canvas id="sentimentChart"></canvas>
                                 </div>
                             </div>
@@ -119,6 +161,9 @@
                             <div class="card-body">
                                 <h6 class="card-title">Likes Distribution by Sentiment</h6>
                                 <div class="chart-container">
+                                    <button class="chart-fullscreen-btn" onclick="toggleFullscreen('likesChart')">
+                                        <i class="bi bi-arrows-fullscreen"></i>
+                                    </button>
                                     <canvas id="likesChart"></canvas>
                                 </div>
                             </div>
@@ -130,6 +175,9 @@
                     <div class="card-body">
                         <h6 class="card-title">Sentiment Score Comparison</h6>
                         <div class="chart-container">
+                            <button class="chart-fullscreen-btn" onclick="toggleFullscreen('scoreChart')">
+                                <i class="bi bi-arrows-fullscreen"></i>
+                            </button>
                             <canvas id="scoreChart"></canvas>
                         </div>
                     </div>
