@@ -55,7 +55,7 @@ document.addEventListener('DOMContentLoaded', () => {
             }
 
             // Then proceed with the themes request
-            const response = await fetch(`${BACKEND_URL}/comments/theme`, {
+            const response = await fetch(`${BACKEND_URL}/comments/theme_named_v2`, {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
@@ -101,7 +101,10 @@ document.addEventListener('DOMContentLoaded', () => {
             return;
         }
 
-        const themesHTML = themes.map((theme, index) => {
+        // Sort themes by importance_score in descending order
+        const sortedThemes = [...themes].sort((a, b) => b.importance_score - a.importance_score);
+
+        const themesHTML = sortedThemes.map((theme, index) => {
             const colorIndex = index % themeColors.length;
             const color = themeColors[colorIndex];
 
@@ -110,7 +113,7 @@ document.addEventListener('DOMContentLoaded', () => {
                     <div class="card theme-card h-100" 
                          style="border-color: ${color.border}; background-color: ${color.bg}">
                         <div class="card-body">
-                            <h5 class="card-title mb-3">Theme ${theme.topic_id + 1}</h5>
+                            <h5 class="card-title mb-3">${theme.name}</h5>
                             <div class="theme-words">
                                 ${theme.top_words.map(word => `
                                     <span class="theme-word" style="border-color: ${color.border}">

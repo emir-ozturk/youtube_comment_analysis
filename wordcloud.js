@@ -3,8 +3,10 @@ document.addEventListener('DOMContentLoaded', () => {
     const videoUrlInput = document.getElementById('videoUrl');
     const loadingSpinner = document.querySelector('.loading');
     const wordCloudContainer = document.getElementById('wordCloudContainer');
+    const sentimentSelect = document.getElementById('sentimentSelect');
     let wordCloudSvg;
-    let currentWordData = []; // Store the current word data
+    let currentWordData = {}; // Store all sentiment data
+    let currentSentiment = 'all'; // Default sentiment
 
     // Initialize empty word cloud
     createWordCloud([]);
@@ -48,7 +50,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 throw new Error(responseData.error || `HTTP error! status: ${classifyResponse.status}`);
             }
 
-            const response = await fetch('http://127.0.0.1:5000/comments/wordcloud', {
+            const response = await fetch('http://127.0.0.1:5000/comments/wordcloud_sentiment', {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
@@ -63,9 +65,8 @@ document.addEventListener('DOMContentLoaded', () => {
                 throw new Error('Failed to fetch word cloud data');
             }
 
-            const words = await response.json();
-            currentWordData = words; // Store the fetched data
-            createWordCloud(words);
+            currentWordData = await response.json();
+            createWordCloud(currentWordData[currentSentiment]);
         } catch (error) {
             showError('An error occurred while generating the word cloud. Please try again.');
             console.error('Error:', error);
@@ -75,11 +76,19 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     });
 
+    // Add event listener for sentiment selection
+    sentimentSelect.addEventListener('change', (e) => {
+        currentSentiment = e.target.value;
+        if (currentWordData[currentSentiment]) {
+            createWordCloud(currentWordData[currentSentiment]);
+        }
+    });
+
     function createWordCloud(words) {
         // Clear previous word cloud
         d3.select("#wordCloudContainer").selectAll("*").remove();
 
-        if (words.length === 0) {
+        if (!words || words.length === 0) {
             // Display a message when no data is available
             wordCloudContainer.innerHTML = '<div class="text-center text-muted mt-5">Enter a YouTube URL to generate word cloud</div>';
             return;
@@ -161,8 +170,8 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // Handle window resize
     window.addEventListener('resize', () => {
-        if (wordCloudSvg) {
-            createWordCloud(currentWordData);
+        if (wordCloudSvg && currentWordData[currentSentiment]) {
+            createWordCloud(currentWordData[currentSentiment]);
         }
     });
 }); 
